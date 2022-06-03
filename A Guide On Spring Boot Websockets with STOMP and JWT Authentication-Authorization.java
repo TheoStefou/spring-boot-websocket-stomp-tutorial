@@ -449,7 +449,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 /*
     At last, slightly change the preSend method of MyChannelInterceptor to call the method of the WebSocketSessionService
-    that transfers a session from the sessions map to the unclaimed map.
+    that transfers a session from the unclaimed map to the sessions map.
 */
 
 @Component
