@@ -270,7 +270,7 @@ public class MessageController {
 
 
 /*
-    If you want to have private chat functionality, you will have to define a classic RestController.
+    If you want to have private chat functionality, you could define a classic RestController.
     You can also use the NotificationService that we defined above.
 */
 
