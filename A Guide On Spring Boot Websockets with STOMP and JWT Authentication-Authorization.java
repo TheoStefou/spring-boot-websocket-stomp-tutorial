@@ -480,7 +480,7 @@ public class MyChannelInterceptor implements ChannelInterceptor {
 
                 /* THIS IS THE ADDITION FOR THIS PART */
 
-                webSocketSessionService.moveUnclaimedToSessions(sessionId, authorization);
+                webSocketSessionService.moveUnclaimedToSessions(sessionId, username);
 
                 /* ---------------------------------- */
 
