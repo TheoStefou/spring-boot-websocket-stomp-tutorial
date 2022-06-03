@@ -10,7 +10,7 @@
     ...
     ... Your antMatchers go here
     ...
-    .antMatchers("our-websocket/**").permitAll() <-------------- This endpoint (and all below it) as you will see later is used by STOMP before upgrading the http connection to a websocket connection
+    .antMatchers("/our-websocket/**").permitAll() <-------------- This endpoint (and all below it) as you will see later is used by STOMP before upgrading the http connection to a websocket connection
     .anyRequest().authenticated()
     .and().sessionManagement()
     .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
