@@ -70,6 +70,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(final StompEndpointRegistry registry) {
         registry.addEndpoint("/our-websocket")
+                //.setHandshakeHandler(new UserHandshakeHandler()) <- Add this if you want control of the HttpHandshake that happens before upgrading to web socket. More info at the end of the file.
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
 
@@ -180,7 +181,7 @@ public class MyStompSubProtocolErrorHandler extends StompSubProtocolErrorHandler
         else if(cause.getCause() instanceof /* Your custom class type that was thrown when SUBSCRIBE failed */) {
             return MessageBuilder.createMessage("You are not authorized to subscribe to this topic.".getBytes(StandardCharsets.UTF_8), headerAccessor.getMessageHeaders());
         }
-        else if(cause.getCause() instance of /* Your custom class type that was thrown when SEND failed */) {
+        else if(cause.getCause() instanceof /* Your custom class type that was thrown when SEND failed */) {
           return MessageBuilder.createMessage("You are not authorized to send messages to this topic.".getBytes(StandardCharsets.UTF_8), headerAccessor.getMessageHeaders());
         }
 
@@ -271,7 +272,7 @@ public class MessageController {
 
 /*
     If you want to have private chat functionality, you could define a classic RestController.
-    You can also use the NotificationService that we defined above.
+    You can also utilize the NotificationService that we defined above.
 */
 
 @RestController
@@ -291,7 +292,7 @@ public class WSController {
     }
 
 
-    // This will notify a specific user with principal=id who is listening to user/topic/private-messages after receiving an HTTP POST request at /send-private-message/{id}
+    // This will notify a specific user with principal=id who is listening to /user/topic/private-messages after receiving an HTTP POST request at /send-private-message/{id}
 
     @PostMapping("/send-private-message/{id}")
     public void sendPrivateMessage(@PathVariable final String id,
@@ -356,7 +357,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
     @Override
     public void registerStompEndpoints(final StompEndpointRegistry registry) {
-        registry.addEndpoint(endpoint).setAllowedOrigins("*").withSockJS();
+        registry
+          .addEndpoint(endpoint)
+          .setAllowedOriginPatterns("*")
+          .withSockJS();
     }
 }
 
@@ -528,3 +532,24 @@ public class MyChannelInterceptor implements ChannelInterceptor {
     should be checked later on by your preSend implementation of MyChannelInterceptor and close all of their
     connections using the WebSocketSessionService service.
 */
+
+/*
+    If you want to inject code at the level of the http handshake before upgrading the connection to websocket, you may use this class.
+    In a stateless environment, you cannot determine the identity of the user from the http handshake because SockJS does not allow sending
+    http headers. However, you can inject a one-time-use token (which you would have acquired via a regular http route) to achieve authentication.
+    If you do the following, you don't need to check for a jwt token in the Stomp headers in MyChannelInterceptor, because there will already
+    be a UserPrincipal available.
+*/
+
+public class UserHandshakeHandler extends DefaultHandshakeHandler {
+    private final Logger LOG = LoggerFactory.getLogger(UserHandshakeHandler.class);
+
+    @Override
+    protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
+        // Something like this could work
+        MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUriString(request.getURI().toString()).build().getQueryParams();
+        String jwt = queryParams.get("token").get(0);
+        String username = //authService.getUsername(jwt);
+        return new UserPrincipal(username);
+    }
+}
